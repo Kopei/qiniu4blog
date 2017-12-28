@@ -1,4 +1,9 @@
 [![](https://img.shields.io/badge/python-2.7.9-blue.svg)](https://pypi.python.org/pypi/qiniu4blog)
+# 开机启动守护进程
+```bash
+vim qiniu.plist
+launchctl load qiniu.plist
+```
 
 #打造自己的图床(qiniu)
 #软件介绍
