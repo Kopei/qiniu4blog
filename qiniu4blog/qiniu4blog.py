@@ -42,7 +42,8 @@ def job(file, mode):
     pyperclip.copy(url)
     pyperclip.paste()
     print url
-    with open('MARKDOWN_FORMAT_URLS.txt', 'a') as f:
+    homedir = expanduser("~")  # 获取用户主目录
+    with open(homedir+'/MARKDOWN_FORMAT_URLS.txt', 'a') as f:
         image = '![' + url + ']' + '(' + url + ')' + '\n'
         f.write(image + '\n')
 
