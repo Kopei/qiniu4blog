@@ -1,0 +1,12 @@
+Exception in thread Thread-3:
+Traceback (most recent call last):
+  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 810, in __bootstrap_inner
+    self.run()
+  File "/Users/ncpbestgmail.com/github/qiniu4blog/qiniu4blog/qiniu4blog.py", line 32, in run
+    job(self.filePath, self.mode)
+  File "/Users/ncpbestgmail.com/github/qiniu4blog/qiniu4blog/qiniu4blog.py", line 39, in job
+    url = upload_with_full_Path(file)
+  File "/Users/ncpbestgmail.com/github/qiniu4blog/qiniu4blog/qiniu4blog.py", line 128, in upload_with_full_Path
+    return addr + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
+NameError: global name 'addr' is not defined
+

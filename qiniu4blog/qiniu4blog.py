@@ -75,10 +75,7 @@ try:
     secretKey = config.get('config', 'secretKey')  # 设置  secretKey
     path_to_watch = config.get('config', 'path_to_watch')  # 设置   监控文件夹
     enable = config.get('custom_url', 'enable')  # 设置自定义使能 custom_url
-    if enable == 'false':
-        print 'custom_url not set'
-    else:
-        addr = config.get('custom_url', 'addr')
+    addr = config.get('custom_url', 'addr')
 except ConfigParser.NoSectionError, err:
     print 'Error Config File:', err
 
@@ -125,10 +122,7 @@ def upload_with_full_Path(filePath):
     else:
         fileName = "".join(filePath.rsplit(path_to_watch))[1:]
     upload_without_key(bucket, filePath, fileName.decode(setCodeingByOS()))
-    if enable == 'true':
-        return addr + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
-    else:
-        return 'http://' + bucket + '.qiniudn.com/' + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
+    return addr + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
 
 
 # 上传文件方式 3
@@ -138,10 +132,7 @@ def upload_with_full_Path_cmd(filePath):
     else:
         fileName = os.path.basename(filePath)
     upload_without_key(bucket, filePath, fileName.decode(setCodeingByOS()))
-    if enable == 'true':
-        return addr + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
-    else:
-        return 'http://' + bucket + '.qiniudn.com/' + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
+    return addr + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
 
 #-----------------window platform---------------start
 # window下的监控文件夹变动方式-获取所有文件路径
@@ -207,7 +198,7 @@ def unix_main():
     observer.start()
     try:
         while True:
-            time.sleep(1)
+            time.sleep(0.5)
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
