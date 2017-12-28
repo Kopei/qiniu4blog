@@ -48,9 +48,9 @@ def job(file, mode):
         f.write(image + '\n')
 
 #-----------------配置--------------------
-#homedir = expanduser("~")  # 获取用户主目录
+homedir = expanduser("~")  # 获取用户主目录
 config = ConfigParser.RawConfigParser()
-config.read('qiniu.cfg')  # 读取配置文件
+config.read(homedir+'/qiniu.cfg')  # 读取配置文件
 mime = MimeTypes()
 threadLock = threading.Lock()
 

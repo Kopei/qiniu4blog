@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>my.python.script.qiniu</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python</string>
+        <string>/Users/ncpbestgmail.com/github/qiniu4blog/qiniu4blog/qiniu4blog.py</string>
+    </array>
+    <key>StandardErrorPath</key>
+    <string>/Users/ncpbestgmail.com/github/qiniu4blog/qiniu4blog/log.error</string>
+    <key>WorkingDirectory</key>
+    <string>/Users/ncpbestgmail.com/github/qiniu4blog/qiniu4blog/</string>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>    
