@@ -5,6 +5,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 qiniu.cfg
+*.qiniu_pythonsdk_hostscache.json
 # C extensions
 *.so
 
