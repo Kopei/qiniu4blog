@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os, time, sys, ConfigParser, platform, urllib, qiniu, pyperclip, signal, threading
+import os, time, sys, ConfigParser, platform, urllib, pyperclip, signal, threading
 from mimetypes import MimeTypes
 from os.path import expanduser
+
+import boto3 as boto3
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
@@ -14,7 +16,7 @@ class MyHandler(PatternMatchingEventHandler):
     case_sensitive = False
     def process(self, event):
         if event.event_type == 'created'or event.event_type == 'modified': #如果是新增文件或修改的文件
-            myThread(event.src_path, 1).start() # 开启线程
+            myThread(event.src_path).start() # 开启线程
     def on_modified(self, event):
         self.process(event)
     def on_created(self, event):
@@ -23,22 +25,18 @@ class MyHandler(PatternMatchingEventHandler):
 
 # 使用多线程上传
 class myThread(threading.Thread):
-    def __init__(self, filePath, mode): #filePath 文件路径 和 上传模式
+    def __init__(self, filePath): #filePath 文件路径 和 上传模式
         threading.Thread.__init__(self)
         self.filePath = filePath
-        self.mode = mode
     def run(self):
         threadLock.acquire()
-        job(self.filePath, self.mode)
+        job(self.filePath)
         threadLock.release()
 
 
 # 上传图像、复制到粘贴板、写到文件
-def job(file, mode):
-    if mode == 1:
-        url = upload_with_full_Path(file)
-    if mode == 2:
-        url = upload_with_full_Path_cmd(file)
+def job(file):
+    url = upload_with_file_path(file, bucket)
     pyperclip.copy(url)
     pyperclip.paste()
     print url
@@ -50,7 +48,7 @@ def job(file, mode):
 #-----------------配置--------------------
 homedir = expanduser("~")  # 获取用户主目录
 config = ConfigParser.RawConfigParser()
-config.read(homedir+'/qiniu.cfg')  # 读取配置文件
+config.read(homedir+'/s3-kopei.cfg')  # 读取配置文件
 mime = MimeTypes()
 threadLock = threading.Lock()
 
@@ -107,31 +105,14 @@ def parseRet(retData, respInfo):
         print("Upload file failed!")
 
 # 上传文件方式 1
-def upload_without_key(bucket, filePath, uploadname):
-    auth = qiniu.Auth(accessKey, secretKey)
-    upToken = auth.upload_token(bucket, key=None)
-    key = uploadname
-    retData, respInfo = qiniu.put_file(upToken, key, filePath, mime_type=mime.guess_type(filePath)[0])
-    parseRet(retData, respInfo)
-
-
-# 上传文件方式 2
-def upload_with_full_Path(filePath):
-    if platform.system() == 'Windows':
-        fileName = "/".join("".join(filePath.rsplit(path_to_watch))[1:].split("\\"))
-    else:
-        fileName = "".join(filePath.rsplit(path_to_watch))[1:]
-    upload_without_key(bucket, filePath, fileName.decode(setCodeingByOS()))
-    return addr + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
-
-
-# 上传文件方式 3
-def upload_with_full_Path_cmd(filePath):
-    if platform.system() == 'Windows':
-        fileName = os.path.basename("/".join((filePath.split("\\"))))
-    else:
-        fileName = os.path.basename(filePath)
-    upload_without_key(bucket, filePath, fileName.decode(setCodeingByOS()))
+def upload_with_file_path(filePath, bucket):
+    fileName = "".join(filePath.rsplit(path_to_watch))[1:]
+    s3 = boto3.resource('s3')
+    obj = s3.Object(bucket, fileName)
+    obj.upload_file(filePath)
+    object_acl = s3.ObjectAcl(bucket, fileName)
+    response = object_acl.put(ACL='public-read')
+    print response
     return addr + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
 
 #-----------------window platform---------------start
@@ -150,47 +131,11 @@ def set_clipboard(url_list):
         pyperclip.copy(url)
     spam = pyperclip.paste()
 
-def window_main():
-    if len(sys.argv) > 1:
-        url_list = []
-        for i in sys.argv[1:]:
-            url_list.append(upload_with_full_Path_cmd(i))
-        with open('MARKDOWN_FORMAT_URLS.txt', 'a') as f:
-            for url in url_list:
-                image = '![' + url + ']' + '(' + url + ')' + '\n'
-                print url, '\n'
-                f.write(image)
-        print "\nNOTE: THE MARKDOWN FORMAT URLS ALREADY SAVED IN MARKDOWN_FORMAT_URLS.txt FILE"
-        set_clipboard(url_list)
-        sys.exit(-1)
-    print "running ... ... \nPress Ctr+C to Stop"
-    before = get_filepaths(path_to_watch)
-    while 1:
-        time.sleep(1)
-        after = get_filepaths(path_to_watch)
-        added = [f for f in after if not f in before]
-        removed = [f for f in before if not f in after]
-        if added:
-            url_list = []
-            for i in added:
-                url_list.append(upload_with_full_Path(i))
-            with open('MARKDOWN_FORMAT_URLS.txt', 'a') as f:
-                for url in url_list:
-                    image = '![' + url + ']' + '(' + url + ')' + '\n'
-                    print url, '\n'
-                    f.write(image)
-            print "\nNOTE: THE MARKDOWN FORMAT URLS ALREADY SAVED IN MARKDOWN_FORMAT_URLS.txt FILE"
-            set_clipboard(url_list)
-        if removed:
-            pass
-        before = after
-
-
 def unix_main():
     if len(sys.argv) > 1:
         url_list = []
         for i in sys.argv[1:]:
-            myThread(i, 2).start()
+            myThread(i).start()
         sys.exit(-1)
     print "running ... ... \nPress Ctr+C to Stop"
     observer = Observer()
@@ -204,10 +149,7 @@ def unix_main():
     observer.join()
 
 def main():
-    if os.name == 'nt' or platform.system() == 'Windows':
-        window_main()  #window 下执行
-    else:
-        unix_main()   #mac 下执行
+    unix_main()   #mac 下执行
 
 if __name__ == "__main__":
     main()
